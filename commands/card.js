@@ -9,7 +9,6 @@ const ARG2 = "allow_english"
 const ARG3 = "shop_count"
 const ARG4 = "output_english"
 
-
 async function executeCommand(interaction) {
   const card_name = interaction.options.getString(ARG1)
   const allow_english = interaction.options.getBoolean(ARG2) ?? false
@@ -19,13 +18,11 @@ async function executeCommand(interaction) {
   const sf = await Scryfall.build(card_name)
   // 英語版が見つからない（=存在しないカード）
   if (sf.eng_name == null) {
-    return `${card_name}が見つかりませんでした`
+    throw new Error(`${card_name}が見つかりませんでした`)
   }
 
   const wg = await WisdomGuild.build(sf.eng_name, sf.jpn_name, allow_english, shop_count, output_english)
-  const message = wg.row
-
-  return message
+  return wg.row
 }
 
 module.exports = {

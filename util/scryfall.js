@@ -23,7 +23,7 @@ class Scryfall {
       const response = await fetch(url)
       const data = await response.json()
       
-      if (!data.data || data.data.length === 0) {
+      if (!data.data || data.data.length == 0) {
         continue
       }
 

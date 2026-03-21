@@ -31,7 +31,7 @@ class WisdomGuild {
       output_name = eng_name
     }
     const price_list = await wg.fetchPriceList(eng_name, lang_list, shop_count);
-    wg.row = wg.flatPriceList(output_name, price_list)
+    wg.row = await wg.flatPriceList(output_name, price_list)
 
     return wg
   }
@@ -48,15 +48,13 @@ class WisdomGuild {
       const lang_priority = lang_priority_dict[lang]
       const url = `${base_url}${lang}`
 
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "application/x-httpd-php"
-        },
-      })
-      
-      const html = await response.text()
+      const response = await fetch(url)
+      const html = await response.text()      
+      if (!html.includes("table-main")) {
+        result_list.push([0, "NaN", "NaN", url])
+        return result_list
+      }
+
       const $ = cheerio.load(html)
 
       const row_list = $("table.table-main tbody tr").toArray()
@@ -116,7 +114,6 @@ class WisdomGuild {
       const link = price_lang_shop_link[3]
       result = `${result} | [${price}(${shop})](${link})`
     }
-
     return result
   }
 }

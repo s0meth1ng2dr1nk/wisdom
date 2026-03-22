@@ -42,8 +42,8 @@ class WisdomGuild {
     const encoded_name = eng_name.replace(/ /g, "+")
     const base_url = `https://wonder.wisdom-guild.net/price/${encoded_name}/?stock_gt=1&sort=price&sort_op=asc&lang%5B%5D=`
     
-    let price_dict = {}
     let consumed_shop_list = []
+    let price_dict = {}
     for (const lang of lang_list) {
       const lang_priority = lang_priority_dict[lang]
       const url = `${base_url}${lang}`
@@ -51,8 +51,7 @@ class WisdomGuild {
       const response = await fetch(url)
       const html = await response.text()      
       if (!html.includes("table-main")) {
-        result_list.push([0, "NaN", "NaN", url])
-        return result_list
+        continue
       }
 
       const $ = cheerio.load(html)
@@ -81,7 +80,7 @@ class WisdomGuild {
         }
         
         if (price_dict[price_key][shop]) {
-          continue  
+          continue
         }
         
         consumed_shop_list.push(shop)
@@ -89,7 +88,9 @@ class WisdomGuild {
       }
     }
     
-    
+    if (Object.keys(price_dict).length == 0) {
+      result_list.push([0, null, null, base_url])
+    }
 
     const price_key_list = Object.keys(price_dict).sort(collator.compare)
     

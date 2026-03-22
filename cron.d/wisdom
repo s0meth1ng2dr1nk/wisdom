@@ -1,0 +1,1 @@
+*/1 * * * * root ps -A | grep "npm run start" | awk '{print $1}' | xargs -i ls -la /proc/{}/cwd | grep -F /opt/wisdom > /dev/null 2>&1 || (cd /opt/wisdom && npm run start > /dev/null 2>&1) &

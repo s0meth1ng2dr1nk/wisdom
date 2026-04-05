@@ -222,10 +222,17 @@
       if (ok) showMain()
     }
 
+    function apiHeaders(token) {
+      return {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true"
+      }
+    }
+
     async function verifyToken(token) {
       try {
         const res = await fetch(`${API_BASE}/api/card?name=Island`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: apiHeaders(token)
         })
         return res.status !== 401
       } catch {
@@ -271,7 +278,7 @@
       try {
         const params = new URLSearchParams({ name, shop_count: shopCount, allow_english: allowEnglish, output_english: outputEnglish })
         const res = await fetch(`${API_BASE}/api/card?${params}`, {
-          headers: { Authorization: `Bearer ${getToken()}` }
+          headers: apiHeaders(getToken())
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
@@ -302,7 +309,7 @@
       try {
         const params = new URLSearchParams({ url, shop_count: shopCount, allow_english: allowEnglish, output_english: outputEnglish })
         const res = await fetch(`${API_BASE}/api/deck?${params}`, {
-          headers: { Authorization: `Bearer ${getToken()}` }
+          headers: apiHeaders(getToken())
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)

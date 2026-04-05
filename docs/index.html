@@ -93,14 +93,59 @@
     }
 
     .result-row {
-      padding: 0.3rem 0;
+      padding: 0.6rem 0;
       border-bottom: 1px solid #1e2a4a;
     }
 
     .result-row:last-child { border-bottom: none; }
 
-    .result-row a { color: #60a5fa; text-decoration: none; }
-    .result-row a:hover { text-decoration: underline; }
+    .card-result-name {
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      color: #e0e0e0;
+    }
+
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .price-table th {
+      text-align: left;
+      color: #9ca3af;
+      border-bottom: 1px solid #2d2d5e;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .price-table td {
+      padding: 0.25rem 0.5rem;
+      border-bottom: 1px solid #1e2a4a;
+    }
+
+    .price-table tr:last-child td { border-bottom: none; }
+
+    .price-table a { color: #60a5fa; text-decoration: none; }
+    .price-table a:hover { text-decoration: underline; }
+
+    .price-cell { text-align: right; color: #a78bfa; }
+
+    .summary-section {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #2d2d5e;
+    }
+
+    .summary-title {
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      color: #a78bfa;
+    }
+
+    .summary-row { cursor: pointer; }
+    .summary-row:hover { background: #1e2a4a; }
+
+    .missing-cell { color: #f87171; }
 
     .error-msg { color: #f87171; }
     .loading { color: #9ca3af; font-style: italic; }
@@ -194,7 +239,7 @@
 
   <script>
     // GCP VMのIPアドレスまたはドメインに変更してください
-    const API_BASE = "https://superhumanly-proximal-karima.ngrok-free.dev"
+    const API_BASE = ""
 
     const authSection = document.getElementById("auth-section")
     const mainSection = document.getElementById("main")
@@ -313,9 +358,48 @@
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
-        resultBox.innerHTML = data.list.map(item =>
+        let html = ""
+
+        if (data.summary && data.summary.length > 0) {
+          const summaryRows = data.summary.map(({ shop, total, missing, cards }, index) => {
+            const detailRows = cards.map(c =>
+              `<tr><td style="padding-left:1.5rem">${c.name}</td><td class="price-cell">${c.price.toLocaleString()}円</td></tr>`
+            ).join("")
+            return `<tr class="summary-row" data-target="summary-detail-${index}">
+              <td>${shop} <span class="toggle-icon">▶</span></td>
+              <td class="price-cell">${total.toLocaleString()}円</td>
+              <td class="${missing > 0 ? "missing-cell" : ""}">${missing > 0 ? `${missing}枚取扱なし` : "全取扱"}</td>
+            </tr>
+            <tr id="summary-detail-${index}" style="display:none">
+              <td colspan="3" style="padding:0">
+                <table class="price-table"><tbody>${detailRows}</tbody></table>
+              </td>
+            </tr>`
+          }).join("")
+          html += `<div class="summary-section">
+            <div class="summary-title">ショップ別合計（行をクリックで詳細表示）</div>
+            <table class="price-table">
+              <thead><tr><th>ショップ</th><th>合計金額</th><th>取扱状況</th></tr></thead>
+              <tbody>${summaryRows}</tbody>
+            </table>
+          </div>`
+        }
+
+        html += data.list.map(item =>
           `<div class="result-row">${item.error ? `<span class="error-msg">${item.error}</span>` : renderRow(item.row)}</div>`
         ).join("")
+
+        resultBox.innerHTML = html
+
+        resultBox.querySelectorAll(".summary-row").forEach(row => {
+          row.addEventListener("click", () => {
+            const detail = document.getElementById(row.dataset.target)
+            const icon = row.querySelector(".toggle-icon")
+            const open = detail.style.display !== "none"
+            detail.style.display = open ? "none" : ""
+            icon.textContent = open ? "▶" : "▼"
+          })
+        })
       } catch (e) {
         resultBox.innerHTML = `<span class="error-msg">${e.message}</span>`
       } finally {

@@ -9,23 +9,25 @@ const ARG2 = "allow_english"
 const ARG3 = "shop_count"
 const ARG4 = "output_english"
 
+async function searchCard(card_name, allow_english = false, shop_count = 3, output_english = false) {
+  const sf = await Scryfall.build(card_name)
+  if (sf.eng_name == null) {
+    throw new Error(`${card_name}が見つかりませんでした`)
+  }
+  const wg = await WisdomGuild.build(sf.eng_name, sf.jpn_name, allow_english, shop_count, output_english)
+  return wg.row
+}
+
 async function executeCommand(interaction) {
   const card_name = interaction.options.getString(ARG1)
   const allow_english = interaction.options.getBoolean(ARG2) ?? false
   const shop_count = interaction.options.getInteger(ARG3) ?? 3
   const output_english = interaction.options.getBoolean(ARG4) ?? false
-
-  const sf = await Scryfall.build(card_name)
-  // 英語版が見つからない（=存在しないカード）
-  if (sf.eng_name == null) {
-    throw new Error(`${card_name}が見つかりませんでした`)
-  }
-
-  const wg = await WisdomGuild.build(sf.eng_name, sf.jpn_name, allow_english, shop_count, output_english)
-  return wg.row
+  return searchCard(card_name, allow_english, shop_count, output_english)
 }
 
 module.exports = {
+  searchCard,
   data: new SlashCommandBuilder()
     .setName("card")
     .setDescription("カードの最安値を表示します")

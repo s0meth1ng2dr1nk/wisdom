@@ -65,13 +65,13 @@ app.get("/api/deck", authenticate, async (req, res) => {
   if (!url) return res.status(400).json({ error: "url パラメータが必要です" })
 
   try {
-    const list = await searchDeck(
+    const { list, summary } = await searchDeck(
       url,
       allow_english === "true",
       shop_count ? parseInt(shop_count, 10) : 3,
       output_english === "true"
     )
-    res.json({ list })
+    res.json({ list, summary })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }

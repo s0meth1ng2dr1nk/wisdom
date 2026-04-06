@@ -31,7 +31,11 @@ async function searchDeck(deck_url, allow_english = false, shop_count = 3, outpu
   }
 
   let message_list = []
+  const shopTotals = {}  // { shopName: { total, count } }
+  let totalCards = 0
+
   for (const card_name of site.deck_list) {
+    totalCards++
     const sf = await Scryfall.build(card_name)
     if (sf.eng_name == null) {
       message_list.push({ name: card_name, error: `${card_name}が見つかりませんでした` })
@@ -39,9 +43,25 @@ async function searchDeck(deck_url, allow_english = false, shop_count = 3, outpu
     }
     const wg = await WisdomGuild.build(sf.eng_name, sf.jpn_name, allow_english, shop_count, output_english)
     message_list.push({ name: sf.jpn_name ?? sf.eng_name, row: wg.row })
+
+    for (const [shop, price] of Object.entries(wg.shopPrices)) {
+      if (!shopTotals[shop]) shopTotals[shop] = { total: 0, count: 0, cards: [] }
+      shopTotals[shop].total += price
+      shopTotals[shop].count++
+      shopTotals[shop].cards.push({ name: sf.jpn_name ?? sf.eng_name, price })
+    }
   }
 
-  return message_list
+  const summary = Object.entries(shopTotals)
+    .map(([shop, { total, count, cards }]) => ({
+      shop,
+      total,
+      missing: totalCards - count,
+      cards: cards.sort((a, b) => a.price - b.price),
+    }))
+    .sort((a, b) => a.total - b.total)
+
+  return { list: message_list, summary }
 }
 
 async function executeCommand(interaction) {
@@ -49,7 +69,8 @@ async function executeCommand(interaction) {
   const allow_english = interaction.options.getBoolean(ARG2) ?? false
   const shop_count = interaction.options.getInteger(ARG3) ?? 3
   const output_english = interaction.options.getBoolean(ARG4) ?? false
-  return searchDeck(deck_url, allow_english, shop_count, output_english)
+  const { list } = await searchDeck(deck_url, allow_english, shop_count, output_english)
+  return list
 }
 
 module.exports = {

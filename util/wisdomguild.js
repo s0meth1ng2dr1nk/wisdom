@@ -18,8 +18,9 @@ const priority_threshold = "100"
 class WisdomGuild {
   constructor() {
     this.row
+    this.shopPrices
   }
-  
+
   static async build(eng_name, jpn_name, allow_english, shop_count, output_english) {
     const wg = new WisdomGuild()
     let lang_list = ["JPN"]
@@ -30,8 +31,9 @@ class WisdomGuild {
     if (output_english) {
       output_name = eng_name
     }
-    const price_list = await wg.fetchPriceList(eng_name, lang_list, shop_count);
+    const { price_list, shopPrices } = await wg.fetchPriceList(eng_name, lang_list, shop_count)
     wg.row = await wg.flatPriceList(output_name, price_list)
+    wg.shopPrices = shopPrices
 
     return wg
   }
@@ -88,22 +90,31 @@ class WisdomGuild {
       }
     }
     
+    // 全ショップの最安値を集計
+    const shopPrices = {}
+    for (const shop_dict of Object.values(price_dict)) {
+      for (const [shop, data] of Object.entries(shop_dict)) {
+        shopPrices[shop] = parseInt(data[0])
+      }
+    }
+
     if (Object.keys(price_dict).length == 0) {
       result_list.push([0, null, null, base_url])
+      return { price_list: result_list, shopPrices }
     }
 
     const price_key_list = Object.keys(price_dict).sort(collator.compare)
-    
+
     for (const price_key of price_key_list) {
       const shop_dict = price_dict[price_key]
       const shop_key_list = Object.keys(shop_dict).sort(collator.compare)
-      
+
       for (const shop_key of shop_key_list) {
         result_list.push(shop_dict[shop_key])
       }
     }
-    
-    return result_list.splice(0, shop_count)
+
+    return { price_list: result_list.splice(0, shop_count), shopPrices }
   }
 
   async flatPriceList(output_name, price_list) {

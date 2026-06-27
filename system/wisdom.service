@@ -1,0 +1,17 @@
+[Unit]
+Description=Wisdom Node App
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/wisdom
+
+ExecStart=/usr/bin/npm run start
+
+Restart=always
+RestartSec=3
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

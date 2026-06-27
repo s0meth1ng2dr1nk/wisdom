@@ -11,9 +11,9 @@ const ARG4 = "output_english"
 
 async function executeCommand(interaction) {
   const card_name = interaction.options.getString(ARG1)
-  const allow_english = interaction.options.getBoolean(ARG2) ?? false
-  const shop_count = interaction.options.getInteger(ARG3) ?? 3
-  const output_english = interaction.options.getBoolean(ARG4) ?? false
+  const allow_english = false
+  const shop_count = 1
+  const output_english = false
 
   const sf = await Scryfall.build(card_name)
   // 英語版が見つからない（=存在しないカード）
@@ -34,21 +34,6 @@ module.exports = {
         .setName(ARG1)
         .setDescription("カード名を指定してください")
         .setRequired(true)
-    )
-    .addBooleanOption(option =>
-      option
-        .setName(ARG2)
-        .setDescription("英語版も許可する場合はTrue")
-    )
-    .addIntegerOption(option =>
-      option
-        .setName(ARG3)
-        .setDescription("ショップ数を指定してください")
-    )
-    .addBooleanOption(option =>
-      option
-        .setName(ARG4)
-        .setDescription("英語版で結果出力する場合はTrue")
     ),
   execute: async function(interaction) {
     await interaction.deferReply()
